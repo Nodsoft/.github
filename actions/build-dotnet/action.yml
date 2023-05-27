@@ -48,7 +48,11 @@ runs:
 
     - name: Build project(s)
       shell: bash
-      run: dotnet build ${{ inputs.project-files }} --configuration ${{ inputs.configuration }} --output ${{ inputs.build-folder }}
+      run: dotnet build ${{ inputs.project-files }} --no-restore --configuration ${{ inputs.configuration }} --output ${{ inputs.build-folder }}
+
+    - name: Test project(s)
+      shell: bash
+      run: dotnet test --no-build --verbosity normal
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v2
