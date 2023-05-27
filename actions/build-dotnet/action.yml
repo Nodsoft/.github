@@ -1,0 +1,57 @@
+name: Build .NET Project(s)
+description: 'Builds one or more .NET projects and uploads the build output as an artifact'
+author: 'Nodsoft Systems'
+
+inputs:
+  dotnet-version:
+    description: 'The version of .NET to use for builds'
+    required: false
+    default: '6.0'
+  project-files:
+    description: 'The project file(s) to build'
+    required: false
+    default: ''
+  build-folder:
+    description: 'The output build folder'
+    required: false
+    default: 'build'
+  configuration:
+    description: 'The build configuration'
+    required: false
+    default: 'Release'
+  use-nbgv:
+    description: 'Whether to use NBGV to generate version numbers'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Fetch all history for NBGV
+
+    - name: Setup .NET ${{ inputs.dotnet-version }}
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Install NBGV
+      if: ${{ inputs.use-nbgv == 'true' }}
+      shell: bash
+      run: dotnet tool install --global nbgv
+
+    - name: Restore dependencies
+      shell: bash
+      run: dotnet restore ${{ inputs.project-files }}
+
+    - name: Build project(s)
+      shell: bash
+      run: dotnet build ${{ inputs.project-files }} --configuration ${{ inputs.configuration }} --output ${{ inputs.build-folder }}
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifact
+        path: ${{ inputs.build-folder }}
